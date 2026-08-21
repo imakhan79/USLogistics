@@ -118,6 +118,46 @@ ${openExceptions.map((e) => `- ${e.category} (${e.severity}): ${e.issue_summary}
   }
 }
 
+export async function explainQuoteRate(params: {
+  originSummary: string;
+  destinationSummary: string;
+  equipmentType: string;
+  miles: number;
+  deadheadMiles: number;
+  totalCostEstimate: number;
+  recommendedRate: number;
+  minimumRate: number;
+  expectedMargin: number;
+  riskScore: number;
+  laneHistoryCount: number;
+}): Promise<{ rationale: string; model: string }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const fallback = `Based on ${params.miles} loaded miles${params.deadheadMiles ? ` + ${params.deadheadMiles} deadhead miles` : ""} on ${params.equipmentType.toLowerCase()}, total estimated cost is $${params.totalCostEstimate.toLocaleString()}. Recommended rate $${params.recommendedRate.toLocaleString()} yields ~$${params.expectedMargin.toLocaleString()} margin. ${params.laneHistoryCount > 0 ? `Blended with ${params.laneHistoryCount} historical load(s) on this lane.` : "No prior loads on this lane, so the rate leans on the cost-plus-margin model alone."} Risk score ${params.riskScore}/100.`;
+
+  if (!apiKey) return { rationale: fallback, model: "rules" };
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const prompt = `You are a freight broker's rate analyst. In 2-3 short sentences, explain this quote recommendation to a dispatcher using ONLY these numbers (do not invent anything else):
+
+Lane: ${params.originSummary} -> ${params.destinationSummary}, ${params.miles} miles loaded, ${params.deadheadMiles} miles deadhead, equipment: ${params.equipmentType}
+Total estimated cost: $${params.totalCostEstimate}
+Recommended customer rate: $${params.recommendedRate}
+Minimum profitable rate: $${params.minimumRate}
+Expected margin: $${params.expectedMargin}
+Risk score: ${params.riskScore}/100
+Historical loads on this exact lane: ${params.laneHistoryCount}`;
+
+    const response = await ai.models.generateContent({ model: MODEL, contents: prompt });
+    const text = response.text;
+    if (!text) throw new Error("empty Gemini response");
+    return { rationale: text.trim(), model: MODEL };
+  } catch (err) {
+    console.error("Gemini quote rationale failed, using fallback:", err);
+    return { rationale: fallback, model: "rules-fallback" };
+  }
+}
+
 export async function answerCopilotQuestion(
   question: string,
   contextSummary: string,

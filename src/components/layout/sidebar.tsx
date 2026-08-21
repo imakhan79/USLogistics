@@ -15,12 +15,14 @@ import {
   Bot,
   DollarSign,
   Settings,
+  Calculator,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { href: "/loads", label: "Loads", icon: Package },
   { href: "/dispatch", label: "Dispatch", icon: Truck },
+  { href: "/quotes", label: "Quoting", icon: Calculator },
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/carriers", label: "Carriers", icon: Building2 },
   { href: "/drivers", label: "Drivers", icon: User },

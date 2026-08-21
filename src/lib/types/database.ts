@@ -175,6 +175,39 @@ export interface AiAgent {
   created_at: string;
 }
 
+export type QuoteStatus = "draft" | "quoted" | "sent" | "approved" | "rejected" | "converted" | "expired";
+
+export interface Quote {
+  id: string;
+  tenant_id: string;
+  quote_number: string;
+  customer_id: string | null;
+  origin_summary: string;
+  destination_summary: string;
+  equipment_type: string;
+  commodity: string | null;
+  weight_lbs: number | null;
+  miles: number;
+  deadhead_miles: number;
+  carrier_cost_estimate: number;
+  fuel_cost_estimate: number;
+  deadhead_cost_estimate: number;
+  accessorial_cost_estimate: number;
+  other_cost_estimate: number;
+  total_cost_estimate: number;
+  target_margin_pct: number;
+  recommended_rate: number | null;
+  minimum_rate: number | null;
+  expected_margin: number;
+  risk_score: number;
+  ai_rationale: string | null;
+  ai_model: string | null;
+  status: QuoteStatus;
+  converted_load_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Invoice {
   id: string;
   tenant_id: string;
