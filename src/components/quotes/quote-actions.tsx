@@ -28,7 +28,7 @@ export function QuoteActions({ quoteId, status }: { quoteId: string; status: Quo
         </>
       )}
       {status === "approved" && (
-        <Button size="sm" disabled={isPending} onClick={() => startTransition(() => convertQuoteToLoad(quoteId))}>
+        <Button size="sm" disabled={isPending} onClick={() => startTransition(async () => { await convertQuoteToLoad(quoteId); })}>
           Convert to Load
         </Button>
       )}

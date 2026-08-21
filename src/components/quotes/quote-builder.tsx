@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, MapPinned } from "lucide-react";
 import { getRateRecommendation, createQuote } from "@/app/(app)/quotes/actions";
 import type { QuoteEstimate } from "@/lib/quoting/rate-engine";
 
@@ -28,8 +28,29 @@ export function QuoteBuilder({ customers }: { customers: { id: string; name: str
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, startSaving] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [distanceLoading, setDistanceLoading] = useState(false);
+  const [distanceError, setDistanceError] = useState<string | null>(null);
 
   const step = result ? 4 : origin && destination && miles ? 1 : 0;
+
+  async function calculateDistance() {
+    setDistanceError(null);
+    setDistanceLoading(true);
+    try {
+      const res = await fetch("/api/geo/distance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ origin, destination }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "distance lookup failed");
+      setMiles(String(data.miles));
+    } catch (err) {
+      setDistanceError(err instanceof Error ? err.message : "Distance lookup failed");
+    } finally {
+      setDistanceLoading(false);
+    }
+  }
 
   async function analyze() {
     setError(null);
@@ -138,8 +159,21 @@ export function QuoteBuilder({ customers }: { customers: { id: string; name: str
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Input type="number" min="0" placeholder="Weight (lbs)" value={weight} onChange={(e) => setWeight(e.target.value)} />
-            <Input type="number" min="0" required placeholder="Loaded miles" value={miles} onChange={(e) => setMiles(e.target.value)} />
+            <div className="flex gap-1.5">
+              <Input type="number" min="0" required placeholder="Loaded miles" value={miles} onChange={(e) => setMiles(e.target.value)} />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!origin || !destination || distanceLoading}
+                onClick={calculateDistance}
+                title="Calculate real driving distance via Geoapify"
+              >
+                {distanceLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPinned className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
+          {distanceError && <p className="text-xs text-danger">{distanceError}</p>}
           <div className="grid grid-cols-3 gap-2">
             <Input type="number" min="0" placeholder="Deadhead miles" value={deadhead} onChange={(e) => setDeadhead(e.target.value)} />
             <Input type="number" min="0" placeholder="Accessorial cost ($)" value={accessorial} onChange={(e) => setAccessorial(e.target.value)} />

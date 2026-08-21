@@ -27,17 +27,25 @@ create policy "profiles_update_own" on public.profiles
   using (id = (select auth.uid()))
   with check (id = (select auth.uid()));
 
--- Reusable helper: current user's tenant. Safe from recursion because
--- profiles' own RLS policy is keyed on id = auth.uid(), not tenant_id.
+-- Reusable helper: current user's tenant. SECURITY DEFINER so this lookup
+-- bypasses RLS on profiles entirely — profiles' SELECT policy itself calls
+-- this function (to allow viewing tenant-mates), and Postgres does not
+-- guarantee short-circuit evaluation of OR'd RLS quals, so a SECURITY
+-- INVOKER version here would recurse into profiles_select and blow the
+-- stack. Kept to a single narrow, parameterless lookup — safe to bypass RLS
+-- for.
 create function public.current_tenant_id()
 returns uuid
 language sql
 stable
-security invoker
+security definer
 set search_path = ''
 as $$
   select tenant_id from public.profiles where id = auth.uid()
 $$;
+
+revoke execute on function public.current_tenant_id() from public;
+grant execute on function public.current_tenant_id() to authenticated;
 
 create policy "tenants_select_own" on public.tenants
   for select to authenticated

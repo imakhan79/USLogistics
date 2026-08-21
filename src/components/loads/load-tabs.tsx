@@ -5,10 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Phone, Mail, StickyNote, Download, Eye } from "lucide-react";
-import type { Document, Communication as CommunicationRow, Invoice, Load } from "@/lib/types/database";
+import type { Document, Communication, CommunicationType, Invoice, Load } from "@/lib/types/database";
 
 type LoadStatusHistoryRow = { id: string; from_status: string | null; to_status: string; changed_at: string };
-type Communication = CommunicationRow;
 
 const DOC_STATUS_VARIANT: Record<string, "success" | "warning" | "danger" | "neutral"> = {
   validated: "success",
@@ -17,7 +16,7 @@ const DOC_STATUS_VARIANT: Record<string, "success" | "warning" | "danger" | "neu
   expired: "danger",
 };
 
-const COMM_ICON = { email: Mail, call: Phone, sms: Phone, note: StickyNote };
+const COMM_ICON: Record<CommunicationType, typeof Mail> = { email: Mail, call: Phone, sms: Phone, note: StickyNote };
 
 export function LoadTabs({
   documents,

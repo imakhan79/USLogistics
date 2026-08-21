@@ -208,6 +208,20 @@ export interface Quote {
   updated_at: string;
 }
 
+export type CommunicationType = "email" | "call" | "sms" | "note";
+
+export interface Communication {
+  id: string;
+  tenant_id: string;
+  load_id: string;
+  type: CommunicationType;
+  subject: string | null;
+  body: string | null;
+  from_user_id: string | null;
+  occurred_at: string;
+  created_at: string;
+}
+
 export interface Invoice {
   id: string;
   tenant_id: string;
