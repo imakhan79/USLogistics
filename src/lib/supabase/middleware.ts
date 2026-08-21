@@ -29,14 +29,15 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/sign-up");
+  const isPublicRoute = isAuthRoute || request.nextUrl.pathname === "/";
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && (isAuthRoute || request.nextUrl.pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

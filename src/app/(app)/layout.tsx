@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { PageTransition } from "@/components/layout/page-transition";
 import type { Profile, Tenant } from "@/lib/types/database";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -35,7 +36,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar profile={profile} tenant={tenant} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </div>
   );

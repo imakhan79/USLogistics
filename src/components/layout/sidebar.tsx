@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -42,7 +43,7 @@ export function Sidebar() {
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
       <div className="flex h-16 items-center gap-2 px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-teal text-sm font-bold text-primary-dark">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-teal text-sm font-bold text-primary-dark shadow-[var(--shadow-sm)]">
           AF
         </div>
         <span className="text-sm font-semibold text-sidebar-foreground">Autonomous Freight</span>
@@ -56,14 +57,21 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-accent-teal/15 text-accent-teal"
+                  ? "text-accent-teal"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
               )}
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              {active && (
+                <motion.span
+                  layoutId="sidebar-active-pill"
+                  className="absolute inset-0 rounded-lg bg-accent-teal/15"
+                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                />
+              )}
+              <Icon className="relative z-10 h-4 w-4" />
+              <span className="relative z-10">{item.label}</span>
             </Link>
           );
         })}
