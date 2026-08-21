@@ -8,19 +8,27 @@ import { Bot, Loader2 } from "lucide-react";
 import { updateRecommendationStatus } from "@/app/(app)/dashboard/actions";
 import type { AiRecommendation } from "@/lib/types/database";
 
-export function AiRecommendations({ initial }: { initial: AiRecommendation[] }) {
+export function AiRecommendations({
+  initial,
+  readOnly = false,
+  autoFetch = true,
+}: {
+  initial: AiRecommendation[];
+  readOnly?: boolean;
+  autoFetch?: boolean;
+}) {
   const [recs, setRecs] = useState<AiRecommendation[]>(initial);
-  const [loading, setLoading] = useState(initial.length === 0);
+  const [loading, setLoading] = useState(autoFetch && initial.length === 0);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (initial.length > 0) return;
+    if (!autoFetch || initial.length > 0) return;
     fetch("/api/ai/recommendations", { method: "POST" })
       .then((r) => r.json())
       .then((data) => setRecs(data.recommendations ?? []))
       .catch(() => setRecs([]))
       .finally(() => setLoading(false));
-  }, [initial.length]);
+  }, [initial.length, autoFetch]);
 
   function act(id: string, status: "approved" | "dismissed") {
     setRecs((prev) => prev.filter((r) => r.id !== id));
@@ -61,17 +69,19 @@ export function AiRecommendations({ initial }: { initial: AiRecommendation[] }) 
               {rec.estimated_cost != null && <span>Est. cost ${rec.estimated_cost.toLocaleString()}</span>}
               {rec.estimated_delay_minutes != null && <span>Est. delay {rec.estimated_delay_minutes}m</span>}
             </div>
-            <div className="mt-3 flex gap-2">
-              <Button size="sm" disabled={isPending} onClick={() => act(rec.id, "approved")}>
-                Assign
-              </Button>
-              <Button size="sm" variant="outline" disabled={isPending} onClick={() => act(rec.id, "approved")}>
-                Review
-              </Button>
-              <Button size="sm" variant="ghost" disabled={isPending} onClick={() => act(rec.id, "dismissed")}>
-                Dismiss
-              </Button>
-            </div>
+            {!readOnly && (
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" disabled={isPending} onClick={() => act(rec.id, "approved")}>
+                  Assign
+                </Button>
+                <Button size="sm" variant="outline" disabled={isPending} onClick={() => act(rec.id, "approved")}>
+                  Review
+                </Button>
+                <Button size="sm" variant="ghost" disabled={isPending} onClick={() => act(rec.id, "dismissed")}>
+                  Dismiss
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </CardContent>

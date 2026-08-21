@@ -1,14 +1,23 @@
 import { createClient } from "@/lib/supabase/server";
-import { KpiCard } from "@/components/dashboard/kpi-card";
-import { RevenueMarginChart, type RevenueMarginPoint } from "@/components/dashboard/revenue-margin-chart";
-import { ExceptionQueue } from "@/components/dashboard/exception-queue";
-import { AiRecommendations } from "@/components/dashboard/ai-recommendations";
-import { OpsMapLoader } from "@/components/dashboard/ops-map-loader";
-import { formatCurrency, formatPercent } from "@/lib/utils";
-import type { Load, ExceptionRow, LoadStop, AiRecommendation } from "@/lib/types/database";
+import { OwnerDashboard } from "@/components/dashboard/owner-dashboard";
+import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
+import { DispatcherDashboard } from "@/components/dashboard/dispatcher-dashboard";
+import { DriverDashboard } from "@/components/dashboard/driver-dashboard";
+import { ViewerDashboard } from "@/components/dashboard/viewer-dashboard";
+import type { RevenueMarginPoint } from "@/components/dashboard/revenue-margin-chart";
+import type { DashboardData } from "@/components/dashboard/dashboard-data";
+import type { Load, LoadStop } from "@/lib/types/database";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    : { data: null };
 
   const [{ data: loads }, { data: exceptions }, { data: stops }, { data: trucks }, { data: recommendations }] =
     await Promise.all([
@@ -26,7 +35,7 @@ export default async function DashboardPage() {
   const allLoads = (loads ?? []) as Load[];
   const activeLoads = allLoads.filter((l) => !["delivered", "cancelled"].includes(l.status));
   const atRiskLoads = allLoads.filter((l) => l.risk_level !== "ok");
-  const availableTrucks = (trucks ?? []).filter((t) => t.status === "available");
+  const availableTrucksCount = (trucks ?? []).filter((t) => t.status === "available").length;
 
   const today = new Date().toDateString();
   const revenueToday = allLoads
@@ -63,39 +72,30 @@ export default async function DashboardPage() {
       };
     });
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Command Center</h1>
-        <p className="text-sm text-muted-foreground">Real-time view of your freight operations</p>
-      </div>
+  const data: DashboardData = {
+    allLoads,
+    activeLoads,
+    atRiskLoads,
+    availableTrucksCount,
+    revenueToday,
+    marginPct,
+    chartData,
+    mapStops,
+    exceptions: (exceptions ?? []) as DashboardData["exceptions"],
+    recommendations: recommendations ?? [],
+  };
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <KpiCard label="Active Loads" value={String(activeLoads.length)} changePct={12} changeDirection="up" />
-        <KpiCard
-          label="At Risk Loads"
-          value={String(atRiskLoads.length)}
-          changePct={4}
-          changeDirection="down"
-          goodDirection="down"
-        />
-        <KpiCard label="Revenue Today" value={formatCurrency(revenueToday)} changePct={18} changeDirection="up" />
-        <KpiCard label="Margin" value={formatPercent(marginPct)} changePct={2.3} changeDirection="up" />
-        <KpiCard
-          label="Available Trucks"
-          value={String(availableTrucks.length)}
-          changePct={3}
-          changeDirection="down"
-          goodDirection="up"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RevenueMarginChart data={chartData} />
-        <ExceptionQueue exceptions={(exceptions ?? []) as never} />
-        <OpsMapLoader stops={mapStops} />
-        <AiRecommendations initial={(recommendations ?? []) as AiRecommendation[]} />
-      </div>
-    </div>
-  );
+  switch (profile?.role) {
+    case "admin":
+      return <AdminDashboard data={data} />;
+    case "dispatcher":
+      return <DispatcherDashboard data={data} />;
+    case "driver":
+      return <DriverDashboard data={data} />;
+    case "viewer":
+      return <ViewerDashboard data={data} />;
+    case "owner":
+    default:
+      return <OwnerDashboard data={data} />;
+  }
 }

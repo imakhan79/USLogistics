@@ -17,9 +17,14 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 export function ExceptionQueue({
   exceptions,
+  readOnly = false,
+  limit,
 }: {
   exceptions: (ExceptionRow & { load: Pick<Load, "load_number" | "origin_summary" | "destination_summary"> | null })[];
+  readOnly?: boolean;
+  limit?: number;
 }) {
+  const visible = limit ? exceptions.slice(0, limit) : exceptions;
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -29,10 +34,10 @@ export function ExceptionQueue({
         <CardDescription>{exceptions.length} open exceptions requiring attention</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {exceptions.length === 0 && (
+        {visible.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">No open exceptions. Fleet is running clean.</p>
         )}
-        {exceptions.map((exc) => (
+        {visible.map((exc) => (
           <div
             key={exc.id}
             className="flex items-start justify-between gap-3 rounded-xl border border-border p-3"
@@ -54,24 +59,26 @@ export function ExceptionQueue({
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isPending}
-                onClick={() => startTransition(() => updateExceptionStatus(exc.id, "acknowledged"))}
-              >
-                Ack
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={isPending}
-                onClick={() => startTransition(() => updateExceptionStatus(exc.id, "dismissed"))}
-              >
-                Dismiss
-              </Button>
-            </div>
+            {!readOnly && (
+              <div className="flex shrink-0 gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={() => startTransition(() => updateExceptionStatus(exc.id, "acknowledged"))}
+                >
+                  Ack
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isPending}
+                  onClick={() => startTransition(() => updateExceptionStatus(exc.id, "dismissed"))}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </CardContent>
