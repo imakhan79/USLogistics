@@ -213,13 +213,30 @@ export type CommunicationType = "email" | "call" | "sms" | "note";
 export interface Communication {
   id: string;
   tenant_id: string;
-  load_id: string;
+  load_id: string | null;
+  customer_id: string | null;
   type: CommunicationType;
   subject: string | null;
   body: string | null;
   from_user_id: string | null;
   occurred_at: string;
   created_at: string;
+}
+
+export type OpportunityStage = "lead" | "qualified" | "quoting" | "negotiation" | "won" | "lost";
+
+export interface Opportunity {
+  id: string;
+  tenant_id: string;
+  customer_id: string | null;
+  name: string;
+  stage: OpportunityStage;
+  estimated_value: number;
+  probability_pct: number;
+  expected_close_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Invoice {
