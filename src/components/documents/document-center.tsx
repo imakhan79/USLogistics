@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Upload, ScanLine, Eye, Download, Bot, AlertTriangle, X, Loader2, FileX } from "lucide-react";
-import { uploadDocument, getDocumentUrl } from "@/app/(app)/documents/actions";
+import { uploadDocument, getDocumentUrl, analyzeDocument } from "@/app/(app)/documents/actions";
 import type { Document } from "@/lib/types/database";
+import type { DocumentAnalysis } from "@/lib/ai/gemini";
 
 type EnrichedDocument = Document & {
   load: { load_number: string } | null;
@@ -34,10 +35,14 @@ export function DocumentCenter({
   loads: { id: string; load_number: string }[];
   carriers: { id: string; name: string }[];
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [showUpload, setShowUpload] = useState(false);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<{ name: string; analysis: DocumentAnalysis } | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return documents.filter((d) => {
@@ -69,6 +74,33 @@ export function DocumentCenter({
     window.open(res.url, "_blank", "noopener,noreferrer");
   }
 
+  async function runAnalysis(doc: EnrichedDocument) {
+    setAnalyzingId(doc.id);
+    setAnalysisError(null);
+    const res = await analyzeDocument(doc.id);
+    setAnalyzingId(null);
+    if (!res.analysis) {
+      setAnalysisError(res.error ?? "Analysis failed");
+      return;
+    }
+    setAnalysisResult({ name: doc.name, analysis: res.analysis });
+    router.refresh();
+  }
+
+  async function runBulkScan() {
+    const targets = documents.filter((d) => d.status === "pending" && d.file_url);
+    if (targets.length === 0) {
+      setAnalysisError("No pending documents with a file to scan");
+      return;
+    }
+    setAnalyzingId("bulk");
+    for (const doc of targets) {
+      await analyzeDocument(doc.id);
+    }
+    setAnalyzingId(null);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -77,14 +109,18 @@ export function DocumentCenter({
           <p className="text-sm text-muted-foreground">{total} documents on file</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <ScanLine className="h-3.5 w-3.5" /> Scan / OCR
+          <Button variant="outline" size="sm" disabled={analyzingId === "bulk"} onClick={runBulkScan}>
+            {analyzingId === "bulk" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanLine className="h-3.5 w-3.5" />}
+            Scan / OCR
           </Button>
           <Button size="sm" onClick={() => setShowUpload(true)}>
             <Upload className="h-3.5 w-3.5" /> Upload
           </Button>
         </div>
       </div>
+      {analysisError && (
+        <p className="text-xs text-danger">{analysisError} <button className="underline" onClick={() => setAnalysisError(null)}>dismiss</button></p>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
@@ -146,7 +182,17 @@ export function DocumentCenter({
                                 <FileX className="h-3.5 w-3.5" />
                               </span>
                             )}
-                            <Button size="sm" variant="ghost"><Bot className="h-3.5 w-3.5" /></Button>
+                            {hasFile && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={analyzingId === doc.id || analyzingId === "bulk"}
+                                onClick={() => runAnalysis(doc)}
+                                title="AI Analyze"
+                              >
+                                {analyzingId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bot className="h-3.5 w-3.5" />}
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -194,6 +240,47 @@ export function DocumentCenter({
       </div>
 
       {showUpload && <UploadModal loads={loads} carriers={carriers} onClose={() => setShowUpload(false)} />}
+      {analysisResult && <AnalysisModal {...analysisResult} onClose={() => setAnalysisResult(null)} />}
+    </div>
+  );
+}
+
+function AnalysisModal({ name, analysis, onClose }: { name: string; analysis: DocumentAnalysis; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <Card className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <CardContent className="space-y-3 pt-5">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-lg font-semibold">
+              <Bot className="h-4 w-4 text-accent-teal" /> AI Analysis — {name}
+            </h2>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="accent">{analysis.detected_type.replace(/_/g, " ")}</Badge>
+            <span className="text-xs text-muted-foreground">{Math.round(analysis.confidence * 100)}% confidence</span>
+          </div>
+          <p className="text-sm">{analysis.summary}</p>
+          <div className="rounded-lg border border-border p-3">
+            <p className="mb-1 text-xs font-semibold text-muted-foreground">Extracted</p>
+            <p className="whitespace-pre-wrap text-sm">{analysis.extracted_text}</p>
+          </div>
+          {analysis.issues.length > 0 ? (
+            <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-warning">
+                <AlertTriangle className="h-3.5 w-3.5" /> Issues found
+              </p>
+              <ul className="list-inside list-disc text-sm">
+                {analysis.issues.map((issue, i) => <li key={i}>{issue}</li>)}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-xs text-success">No issues found — marked as validated.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

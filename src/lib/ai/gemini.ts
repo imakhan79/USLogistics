@@ -192,3 +192,59 @@ Question: ${question}`;
     };
   }
 }
+
+export interface DocumentAnalysis {
+  detected_type: string;
+  summary: string;
+  extracted_text: string;
+  issues: string[];
+  confidence: number;
+}
+
+const documentAnalysisSchema = {
+  type: Type.OBJECT,
+  properties: {
+    detected_type: { type: Type.STRING, description: "One of: rate_confirmation, bol, pod, invoice, insurance_certificate, w9, other" },
+    summary: { type: Type.STRING, description: "One to two sentence summary of the document contents" },
+    extracted_text: { type: Type.STRING, description: "Key fields extracted as plain text (names, dates, amounts, reference numbers)" },
+    issues: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Anything missing, illegible, or inconsistent — empty array if none" },
+    confidence: { type: Type.NUMBER },
+  },
+  required: ["detected_type", "summary", "extracted_text", "issues", "confidence"],
+};
+
+/** Real Gemini vision call on the actual uploaded file bytes — not a stub. */
+export async function analyzeDocumentFile(
+  fileBytes: Buffer,
+  mimeType: string,
+  declaredName: string,
+): Promise<{ analysis: DocumentAnalysis | null; model: string; error?: string }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return { analysis: null, model: "none", error: "AI is not configured (no API key)" };
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType, data: fileBytes.toString("base64") } },
+            {
+              text: `This is a freight/logistics document named "${declaredName}". Classify it, extract the key fields a dispatcher would need, and flag anything missing or inconsistent. Only report what is actually visible in the document.`,
+            },
+          ],
+        },
+      ],
+      config: { responseMimeType: "application/json", responseSchema: documentAnalysisSchema },
+    });
+
+    const text = response.text;
+    if (!text) throw new Error("empty Gemini response");
+    return { analysis: JSON.parse(text) as DocumentAnalysis, model: MODEL };
+  } catch (err) {
+    console.error("Gemini document analysis failed:", err);
+    return { analysis: null, model: "error", error: err instanceof Error ? err.message : "analysis failed" };
+  }
+}
