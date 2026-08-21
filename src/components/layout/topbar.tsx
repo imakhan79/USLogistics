@@ -1,8 +1,9 @@
 "use client";
 
-import { Search, Bell, Moon, Sun } from "lucide-react";
+import { Bell, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { GlobalSearch } from "@/components/layout/global-search";
 import type { Profile, Tenant } from "@/lib/types/database";
 
 export function Topbar({ profile, tenant }: { profile: Profile | null; tenant: Tenant | null }) {
@@ -12,13 +13,7 @@ export function Topbar({ profile, tenant }: { profile: Profile | null; tenant: T
 
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border bg-background px-6">
-      <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground max-w-md">
-        <Search className="h-4 w-4" />
-        <span className="hidden sm:inline">Search loads, carriers, customers…</span>
-        <kbd className="ml-auto hidden rounded border border-border bg-background px-1.5 py-0.5 text-[10px] sm:inline">
-          ⌘K
-        </kbd>
-      </div>
+      <GlobalSearch />
 
       <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground">
         {tenant?.name ?? "Loading tenant…"}
