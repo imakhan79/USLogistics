@@ -164,6 +164,17 @@ export interface Document {
   created_at: string;
 }
 
+export interface AiAgent {
+  id: string;
+  tenant_id: string;
+  key: string;
+  name: string;
+  description: string;
+  autonomy_level: 0 | 1 | 2 | 3;
+  enabled: boolean;
+  created_at: string;
+}
+
 export interface Invoice {
   id: string;
   tenant_id: string;

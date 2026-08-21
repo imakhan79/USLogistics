@@ -117,3 +117,38 @@ ${openExceptions.map((e) => `- ${e.category} (${e.severity}): ${e.issue_summary}
     return { recommendations: ruleBasedFallback(atRiskLoads, openExceptions), model: "rules-fallback" };
   }
 }
+
+export async function answerCopilotQuestion(
+  question: string,
+  contextSummary: string,
+): Promise<{ answer: string; model: string }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return {
+      answer: "AI Copilot is unavailable right now (no API key configured). Here's the raw data instead:\n\n" + contextSummary,
+      model: "none",
+    };
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const prompt = `You are the AI Copilot for a U.S. freight brokerage's operations platform. Answer the dispatcher's question using ONLY the data below — never invent load numbers, carriers, or figures that aren't present. If the data doesn't contain the answer, say so plainly. Keep the answer concise (under 120 words), and cite specific load numbers/figures from the data when relevant.
+
+Live tenant data:
+${contextSummary}
+
+Question: ${question}`;
+
+    const response = await ai.models.generateContent({ model: MODEL, contents: prompt });
+    const text = response.text;
+    if (!text) throw new Error("empty Gemini response");
+    return { answer: text.trim(), model: MODEL };
+  } catch (err) {
+    console.error("Gemini copilot call failed:", err);
+    return {
+      answer: "The AI Copilot couldn't reach the model just now. Here's the raw data instead:\n\n" + contextSummary,
+      model: "error-fallback",
+    };
+  }
+}
