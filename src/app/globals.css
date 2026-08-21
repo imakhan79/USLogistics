@@ -15,13 +15,13 @@
 
 :root {
   --background: #fafafa;
-  --foreground: #171717;
+  --foreground: #0a0a0a;
   --card: #ffffff;
-  --card-foreground: #171717;
+  --card-foreground: #0a0a0a;
   --border: #e5e5e5;
   --border-strong: #d4d4d4;
   --muted: #f5f5f5;
-  --muted-foreground: #64748b;
+  --muted-foreground: #3f4a5c;
   --accent: #f0f9fc;
   --primary: #0077b6;
   --primary-foreground: #ffffff;
