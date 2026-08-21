@@ -16,6 +16,7 @@ import {
   DollarSign,
   Settings,
   Calculator,
+  Wallet,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/carriers", label: "Carriers", icon: Building2 },
   { href: "/drivers", label: "Drivers", icon: User },
   { href: "/fleet", label: "Fleet", icon: Truck },
+  { href: "/settlements", label: "Settlements", icon: Wallet },
   { href: "/documents", label: "Documents", icon: FileText },
   { href: "/exceptions", label: "Exceptions", icon: AlertTriangle },
   { href: "/ai", label: "AI Command Center", icon: Bot },

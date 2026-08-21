@@ -49,6 +49,8 @@ export interface Carrier {
   created_at: string;
 }
 
+export type DriverPayType = "per_mile" | "percentage" | "fixed";
+
 export interface Driver {
   id: string;
   tenant_id: string;
@@ -59,7 +61,32 @@ export interface Driver {
   license_number: string | null;
   license_expiry: string | null;
   status: "active" | "off_duty" | "inactive";
+  pay_type: DriverPayType;
+  pay_rate: number;
   created_at: string;
+}
+
+export type SettlementStatus = "draft" | "approved" | "paid";
+
+export interface Settlement {
+  id: string;
+  tenant_id: string;
+  driver_id: string;
+  period_start: string;
+  period_end: string;
+  load_count: number;
+  gross_pay: number;
+  bonus: number;
+  fuel_deduction: number;
+  tolls_deduction: number;
+  advances_deduction: number;
+  expenses_deduction: number;
+  other_deductions: number;
+  net_pay: number;
+  status: SettlementStatus;
+  notes: string | null;
+  created_at: string;
+  paid_at: string | null;
 }
 
 export interface Truck {
@@ -89,6 +116,7 @@ export interface Load {
   commodity: string | null;
   weight_lbs: number | null;
   pallets: number | null;
+  miles: number | null;
   origin_summary: string | null;
   destination_summary: string | null;
   revenue: number;
