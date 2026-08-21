@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Upload, ScanLine, Eye, Download, Bot, AlertTriangle } from "lucide-react";
+import { Search, Upload, ScanLine, Eye, Download, Bot, AlertTriangle, X, Loader2, FileX } from "lucide-react";
+import { uploadDocument, getDocumentUrl } from "@/app/(app)/documents/actions";
 import type { Document } from "@/lib/types/database";
 
 type EnrichedDocument = Document & {
@@ -20,11 +22,22 @@ const STATUS_LABEL: Record<string, { label: string; variant: "success" | "warnin
   expired: { label: "Expired", variant: "danger" },
 };
 
+const DOC_TYPES = ["rate_confirmation", "bol", "pod", "invoice", "insurance_certificate", "w9", "other"];
 const FILTERS = ["All", "Validated", "Pending", "Active", "Expired"] as const;
 
-export function DocumentCenter({ documents }: { documents: EnrichedDocument[] }) {
+export function DocumentCenter({
+  documents,
+  loads,
+  carriers,
+}: {
+  documents: EnrichedDocument[];
+  loads: { id: string; load_number: string }[];
+  carriers: { id: string; name: string }[];
+}) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [showUpload, setShowUpload] = useState(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return documents.filter((d) => {
@@ -45,6 +58,17 @@ export function DocumentCenter({ documents }: { documents: EnrichedDocument[] })
   const missing = documents.filter((d) => d.status === "pending").length;
   const expiring = documents.filter((d) => d.status === "expired").length;
 
+  async function openDocument(id: string) {
+    setOpeningId(id);
+    const res = await getDocumentUrl(id);
+    setOpeningId(null);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    window.open(res.url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -56,7 +80,7 @@ export function DocumentCenter({ documents }: { documents: EnrichedDocument[] })
           <Button variant="outline" size="sm">
             <ScanLine className="h-3.5 w-3.5" /> Scan / OCR
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowUpload(true)}>
             <Upload className="h-3.5 w-3.5" /> Upload
           </Button>
         </div>
@@ -98,6 +122,7 @@ export function DocumentCenter({ documents }: { documents: EnrichedDocument[] })
                 <tbody>
                   {filtered.map((doc) => {
                     const status = STATUS_LABEL[doc.status] ?? { label: doc.status, variant: "neutral" as const };
+                    const hasFile = !!doc.file_url;
                     return (
                       <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-accent/50">
                         <td className="px-4 py-3 font-medium">{doc.name}</td>
@@ -106,9 +131,21 @@ export function DocumentCenter({ documents }: { documents: EnrichedDocument[] })
                           <Badge variant={status.variant}>{status.label}</Badge>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
-                            <Button size="sm" variant="ghost"><Download className="h-3.5 w-3.5" /></Button>
+                          <div className="flex items-center gap-1">
+                            {hasFile ? (
+                              <>
+                                <Button size="sm" variant="ghost" disabled={openingId === doc.id} onClick={() => openDocument(doc.id)}>
+                                  {openingId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                                </Button>
+                                <Button size="sm" variant="ghost" disabled={openingId === doc.id} onClick={() => openDocument(doc.id)}>
+                                  <Download className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            ) : (
+                              <span title="No file uploaded" className="flex h-8 w-8 items-center justify-center text-muted-foreground">
+                                <FileX className="h-3.5 w-3.5" />
+                              </span>
+                            )}
                             <Button size="sm" variant="ghost"><Bot className="h-3.5 w-3.5" /></Button>
                           </div>
                         </td>
@@ -155,6 +192,112 @@ export function DocumentCenter({ documents }: { documents: EnrichedDocument[] })
           </CardContent>
         </Card>
       </div>
+
+      {showUpload && <UploadModal loads={loads} carriers={carriers} onClose={() => setShowUpload(false)} />}
+    </div>
+  );
+}
+
+function UploadModal({
+  loads,
+  carriers,
+  onClose,
+}: {
+  loads: { id: string; load_number: string }[];
+  carriers: { id: string; name: string }[];
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState("");
+  const [docType, setDocType] = useState("rate_confirmation");
+  const [associate, setAssociate] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      setError("Choose a file first");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("name", fileName || file.name);
+    formData.set("docType", docType);
+    if (associate.startsWith("load:")) formData.set("loadId", associate.slice(5));
+    if (associate.startsWith("carrier:")) formData.set("carrierId", associate.slice(8));
+
+    const res = await uploadDocument(formData);
+    setSaving(false);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    router.refresh();
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <form onSubmit={submit}>
+          <CardContent className="space-y-3 pt-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Upload Document</h2>
+              <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              required
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-accent-teal/15 file:px-2.5 file:py-1 file:text-xs file:text-accent-teal"
+            />
+
+            <select
+              value={docType}
+              onChange={(e) => setDocType(e.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              {DOC_TYPES.map((t) => (
+                <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
+              ))}
+            </select>
+
+            <select
+              value={associate}
+              onChange={(e) => setAssociate(e.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">No association</option>
+              <optgroup label="Loads">
+                {loads.map((l) => (
+                  <option key={l.id} value={`load:${l.id}`}>{l.load_number}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Carriers">
+                {carriers.map((c) => (
+                  <option key={c.id} value={`carrier:${c.id}`}>{c.name}</option>
+                ))}
+              </optgroup>
+            </select>
+
+            {error && <p className="text-xs text-danger">{error}</p>}
+            <Button type="submit" className="w-full" disabled={saving}>
+              {saving ? "Uploading…" : "Upload"}
+            </Button>
+          </CardContent>
+        </form>
+      </Card>
     </div>
   );
 }

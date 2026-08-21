@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { Tabs } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Phone, Mail, StickyNote, Download, Eye } from "lucide-react";
+import { FileText, Phone, Mail, StickyNote, Download, Eye, Loader2 } from "lucide-react";
+import { getDocumentUrl } from "@/app/(app)/documents/actions";
 import type { Document, Communication, CommunicationType, Invoice, Load } from "@/lib/types/database";
 
 type LoadStatusHistoryRow = { id: string; from_status: string | null; to_status: string; changed_at: string };
@@ -31,6 +33,19 @@ export function LoadTabs({
   invoice: Invoice | null;
   load: Load;
 }) {
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  async function openDocument(id: string) {
+    setOpeningId(id);
+    const res = await getDocumentUrl(id);
+    setOpeningId(null);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    window.open(res.url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <Card>
       <CardContent className="pt-5">
@@ -77,8 +92,18 @@ export function LoadTabs({
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={DOC_STATUS_VARIANT[doc.status] ?? "neutral"}>{doc.status}</Badge>
-                        <Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button>
-                        <Button size="sm" variant="ghost"><Download className="h-3.5 w-3.5" /></Button>
+                        {doc.file_url ? (
+                          <>
+                            <Button size="sm" variant="ghost" disabled={openingId === doc.id} onClick={() => openDocument(doc.id)}>
+                              {openingId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                            </Button>
+                            <Button size="sm" variant="ghost" disabled={openingId === doc.id} onClick={() => openDocument(doc.id)}>
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="px-2 text-xs text-muted-foreground">No file</span>
+                        )}
                       </div>
                     </div>
                   ))}
