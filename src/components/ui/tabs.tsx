@@ -22,7 +22,7 @@ export function Tabs({
             key={tab.value}
             onClick={() => setActive(tab.value)}
             className={cn(
-              "border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+              "cursor-pointer border-b-2 px-3 py-2 text-sm font-medium transition-colors",
               active === tab.value
                 ? "border-accent-teal text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",

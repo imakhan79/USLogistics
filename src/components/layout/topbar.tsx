@@ -24,7 +24,7 @@ export function Topbar({ profile, tenant }: { profile: Profile | null; tenant: T
       <button
         aria-label="Toggle theme"
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg text-muted-foreground transition-colors hover:bg-accent"
+        className="relative flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg text-muted-foreground transition-colors hover:bg-accent"
       >
         <AnimatePresence mode="wait" initial={false}>
           {mounted && theme === "dark" ? (
@@ -55,7 +55,7 @@ export function Topbar({ profile, tenant }: { profile: Profile | null; tenant: T
 
       <button
         aria-label="Notifications"
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent"
+        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent"
       >
         <Bell className="h-4 w-4" />
         <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-danger" />

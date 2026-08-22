@@ -97,7 +97,7 @@ export function NewSettlementModal({
         <CardContent className="space-y-3 pt-5">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">New Settlement</h2>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <button onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
           </div>

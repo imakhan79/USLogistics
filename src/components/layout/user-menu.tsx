@@ -41,7 +41,7 @@ export function UserMenu({ profile }: { profile: Profile | null }) {
       <button
         aria-label="Account menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-teal text-xs font-semibold text-primary-dark shadow-[var(--shadow-sm)] transition-opacity hover:opacity-90"
+        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-accent-teal text-xs font-semibold text-primary-dark shadow-[var(--shadow-sm)] transition-opacity hover:opacity-90"
       >
         {(profile?.full_name ?? "U").slice(0, 1).toUpperCase()}
       </button>
@@ -56,7 +56,7 @@ export function UserMenu({ profile }: { profile: Profile | null }) {
           <button
             onClick={signOut}
             disabled={signingOut}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-accent"
+            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             {signingOut ? "Signing out…" : "Sign out"}

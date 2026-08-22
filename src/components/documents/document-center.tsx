@@ -119,7 +119,7 @@ export function DocumentCenter({
         </div>
       </div>
       {analysisError && (
-        <p className="text-xs text-danger">{analysisError} <button className="underline" onClick={() => setAnalysisError(null)}>dismiss</button></p>
+        <p className="text-xs text-danger">{analysisError} <button className="cursor-pointer underline" onClick={() => setAnalysisError(null)}>dismiss</button></p>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -134,7 +134,7 @@ export function DocumentCenter({
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                     filter === f ? "border-accent-teal bg-accent-teal/15 text-accent-teal" : "border-border text-muted-foreground"
                   }`}
                 >
@@ -254,7 +254,7 @@ function AnalysisModal({ name, analysis, onClose }: { name: string; analysis: Do
             <h2 className="flex items-center gap-1.5 text-lg font-semibold">
               <Bot className="h-4 w-4 text-accent-teal" /> AI Analysis — {name}
             </h2>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <button onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -336,7 +336,7 @@ function UploadModal({
           <CardContent className="space-y-3 pt-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Upload Document</h2>
-              <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground">
                 <X className="h-5 w-5" />
               </button>
             </div>

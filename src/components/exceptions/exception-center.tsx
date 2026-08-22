@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 import { updateExceptionStatus, updateRecommendationStatus } from "@/app/(app)/dashboard/actions";
 import type { AiRecommendation, ExceptionRow, Load } from "@/lib/types/database";
 
@@ -69,7 +70,7 @@ export function ExceptionCenter({
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
               filter === f.key ? "border-accent-teal bg-accent-teal/15 text-accent-teal" : "border-border text-muted-foreground"
             }`}
           >
@@ -95,7 +96,12 @@ export function ExceptionCenter({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Badge variant={exc.severity === "critical" ? "danger" : "warning"}>
-                        {exc.severity === "critical" ? "🔴 Critical" : "🟡 Warning"}
+                        {exc.severity === "critical" ? (
+                          <AlertCircle className="h-3 w-3" />
+                        ) : (
+                          <AlertTriangle className="h-3 w-3" />
+                        )}
+                        {exc.severity === "critical" ? "Critical" : "Warning"}
                       </Badge>
                       <span className="text-xs font-medium text-muted-foreground">{exc.load?.load_number ?? "—"}</span>
                       <span className="text-xs text-muted-foreground">

@@ -69,7 +69,7 @@ export function Copilot() {
               key={s}
               onClick={() => ask(s)}
               disabled={loading}
-              className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-accent-teal hover:text-accent-teal disabled:opacity-50"
+              className="cursor-pointer rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-accent-teal hover:text-accent-teal disabled:cursor-not-allowed disabled:opacity-50"
             >
               {s}
             </button>

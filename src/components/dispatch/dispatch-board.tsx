@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, X, LayoutGrid, List as ListIcon } from "lucide-react";
+import { Search, Plus, X, LayoutGrid, List as ListIcon, CheckCircle2, AlertTriangle, AlertCircle, Package, Rocket, MapPin, Truck, Flag } from "lucide-react";
 import { updateLoadStatus, createLoad } from "@/app/(app)/dispatch/actions";
 import type { Load, LoadStatus } from "@/lib/types/database";
 
@@ -16,15 +16,19 @@ type EnrichedLoad = Load & {
   driver: { name: string } | null;
 };
 
-const COLUMNS: { status: LoadStatus; label: string; emoji: string }[] = [
-  { status: "booked", label: "Booked", emoji: "📦" },
-  { status: "covered", label: "Covered", emoji: "🚀" },
-  { status: "pickup", label: "Pickup", emoji: "📍" },
-  { status: "in_transit", label: "Transit", emoji: "🛣️" },
-  { status: "delivered", label: "Delivered", emoji: "🏁" },
+const COLUMNS: { status: LoadStatus; label: string; icon: typeof Package }[] = [
+  { status: "booked", label: "Booked", icon: Package },
+  { status: "covered", label: "Covered", icon: Rocket },
+  { status: "pickup", label: "Pickup", icon: MapPin },
+  { status: "in_transit", label: "Transit", icon: Truck },
+  { status: "delivered", label: "Delivered", icon: Flag },
 ];
 
-const RISK_ICON: Record<string, string> = { ok: "✅", warning: "🟡", critical: "🔴" };
+const RISK_ICON: Record<string, { icon: typeof CheckCircle2; className: string }> = {
+  ok: { icon: CheckCircle2, className: "text-success" },
+  warning: { icon: AlertTriangle, className: "text-warning" },
+  critical: { icon: AlertCircle, className: "text-danger" },
+};
 
 export function DispatchBoard({
   loads,
@@ -73,13 +77,13 @@ export function DispatchBoard({
           <div className="flex rounded-lg border border-border p-0.5">
             <button
               onClick={() => setView("kanban")}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "kanban" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "kanban" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
             >
               <LayoutGrid className="h-3.5 w-3.5" /> Kanban
             </button>
             <button
               onClick={() => setView("list")}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "list" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "list" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
             >
               <ListIcon className="h-3.5 w-3.5" /> List
             </button>
@@ -116,8 +120,8 @@ export function DispatchBoard({
               }`}
             >
               <div className="flex items-center justify-between px-1">
-                <span className="text-sm font-semibold">
-                  {col.emoji} {col.label}
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <col.icon className="h-3.5 w-3.5 text-muted-foreground" /> {col.label}
                 </span>
                 <Badge variant="neutral">{byStatus(col.status).length}</Badge>
               </div>
@@ -131,7 +135,10 @@ export function DispatchBoard({
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold">{load.load_number}</span>
-                    <span title={load.risk_level}>{RISK_ICON[load.risk_level]}</span>
+                    {(() => {
+                      const Risk = RISK_ICON[load.risk_level];
+                      return Risk ? <Risk.icon className={`h-4 w-4 ${Risk.className}`} aria-label={load.risk_level} /> : null;
+                    })()}
                   </div>
                   <p className="mt-1 truncate text-xs text-muted-foreground">
                     {load.origin_summary} → {load.destination_summary}
@@ -176,7 +183,12 @@ export function DispatchBoard({
                     <td className="px-4 py-3">
                       <Badge variant="neutral">{COLUMNS.find((c) => c.status === load.status)?.label ?? load.status}</Badge>
                     </td>
-                    <td className="px-4 py-3">{RISK_ICON[load.risk_level]}</td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const Risk = RISK_ICON[load.risk_level];
+                        return Risk ? <Risk.icon className={`h-4 w-4 ${Risk.className}`} aria-label={load.risk_level} /> : null;
+                      })()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -200,7 +212,7 @@ function LoadDetailPanel({ load, onClose }: { load: EnrichedLoad; onClose: () =>
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{load.load_number}</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <button onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -296,7 +308,7 @@ function NewLoadModal({
           <CardContent className="space-y-3 pt-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">New Load</h2>
-              <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground">
                 <X className="h-5 w-5" />
               </button>
             </div>

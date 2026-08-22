@@ -35,7 +35,7 @@ export function RecommendationFeed({ recommendations }: { recommendations: AiRec
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-colors ${
+              className={`cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-colors ${
                 filter === f ? "border-accent-teal bg-accent-teal/15 text-accent-teal" : "border-border text-muted-foreground"
               }`}
             >

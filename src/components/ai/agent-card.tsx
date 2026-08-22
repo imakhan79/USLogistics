@@ -29,7 +29,7 @@ export function AgentCard({ agent }: { agent: AiAgent }) {
             aria-checked={agent.enabled}
             disabled={isPending}
             onClick={() => startTransition(() => setAgentEnabled(agent.id, !agent.enabled))}
-            className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${agent.enabled ? "bg-accent-teal" : "bg-muted"}`}
+            className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${agent.enabled ? "bg-accent-teal" : "bg-muted"}`}
           >
             <span
               className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${agent.enabled ? "translate-x-4" : "translate-x-0.5"}`}

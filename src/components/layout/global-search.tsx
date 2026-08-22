@@ -79,7 +79,7 @@ export function GlobalSearch() {
               <button
                 key={`${r.type}-${r.id}`}
                 onClick={() => go(r)}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
+                className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
               >
                 <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1">

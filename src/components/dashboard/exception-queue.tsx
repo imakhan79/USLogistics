@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 import { useTransition } from "react";
 import { updateExceptionStatus } from "@/app/(app)/dashboard/actions";
 import type { ExceptionRow, Load } from "@/lib/types/database";
@@ -45,7 +46,12 @@ export function ExceptionQueue({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant={exc.severity === "critical" ? "danger" : "warning"}>
-                  {exc.severity === "critical" ? "🔴 Critical" : "🟡 Warning"}
+                  {exc.severity === "critical" ? (
+                    <AlertCircle className="h-3 w-3" />
+                  ) : (
+                    <AlertTriangle className="h-3 w-3" />
+                  )}
+                  {exc.severity === "critical" ? "Critical" : "Warning"}
                 </Badge>
                 <span className="truncate text-xs font-medium text-muted-foreground">
                   {exc.load?.load_number ?? "—"}

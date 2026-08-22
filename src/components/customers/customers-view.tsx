@@ -40,13 +40,13 @@ export function CustomersView({
         <div className="flex rounded-lg border border-border p-0.5">
           <button
             onClick={() => setView("directory")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "directory" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "directory" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
           >
             <ListIcon className="h-3.5 w-3.5" /> Directory
           </button>
           <button
             onClick={() => setView("pipeline")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "pipeline" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${view === "pipeline" ? "bg-accent-teal/15 text-accent-teal" : "text-muted-foreground"}`}
           >
             <GitBranch className="h-3.5 w-3.5" /> Pipeline
           </button>
