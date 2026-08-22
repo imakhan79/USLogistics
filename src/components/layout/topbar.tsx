@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GlobalSearch } from "@/components/layout/global-search";
+import { UserMenu } from "@/components/layout/user-menu";
 import type { Profile, Tenant } from "@/lib/types/database";
 
 export function Topbar({ profile, tenant }: { profile: Profile | null; tenant: Tenant | null }) {
@@ -60,9 +61,7 @@ export function Topbar({ profile, tenant }: { profile: Profile | null; tenant: T
         <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-danger" />
       </button>
 
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-teal text-xs font-semibold text-primary-dark shadow-[var(--shadow-sm)]">
-        {(profile?.full_name ?? "U").slice(0, 1).toUpperCase()}
-      </div>
+      <UserMenu profile={profile} />
     </header>
   );
 }
