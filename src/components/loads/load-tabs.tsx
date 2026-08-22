@@ -72,11 +72,11 @@ export function LoadTabs({
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Pickup Date</p>
-                    <p className="font-medium">{load.pickup_date ? new Date(load.pickup_date).toLocaleString() : "—"}</p>
+                    <p className="font-medium">{load.pickup_date ? new Date(load.pickup_date).toLocaleString("en-US") : "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Delivery Date</p>
-                    <p className="font-medium">{load.delivery_date ? new Date(load.delivery_date).toLocaleString() : "—"}</p>
+                    <p className="font-medium">{load.delivery_date ? new Date(load.delivery_date).toLocaleString("en-US") : "—"}</p>
                   </div>
                 </div>
               )}
@@ -121,7 +121,7 @@ export function LoadTabs({
                         <div>
                           <p className="text-sm font-medium">{c.subject}</p>
                           <p className="text-xs text-muted-foreground">{c.body}</p>
-                          <p className="mt-1 text-[11px] text-muted-foreground">{new Date(c.occurred_at).toLocaleString()}</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">{new Date(c.occurred_at).toLocaleString("en-US")}</p>
                         </div>
                       </div>
                     );
@@ -155,7 +155,7 @@ export function LoadTabs({
                       <span>
                         {h.from_status ? `${h.from_status} → ${h.to_status}` : `Created as ${h.to_status}`}
                       </span>
-                      <span className="text-xs text-muted-foreground">{new Date(h.changed_at).toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">{new Date(h.changed_at).toLocaleString("en-US")}</span>
                     </li>
                   ))}
                 </ol>

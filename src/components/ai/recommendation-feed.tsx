@@ -65,7 +65,7 @@ export function RecommendationFeed({ recommendations }: { recommendations: AiRec
             <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
               {rec.estimated_cost != null && <span>Est. cost ${rec.estimated_cost.toLocaleString()}</span>}
               {rec.estimated_delay_minutes != null && <span>Est. delay {rec.estimated_delay_minutes}m</span>}
-              <span>{new Date(rec.created_at).toLocaleString()}</span>
+              <span>{new Date(rec.created_at).toLocaleString("en-US")}</span>
             </div>
             {rec.status === "pending" && (
               <div className="mt-2 flex gap-2">

@@ -130,7 +130,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           {(notes ?? []).map((n) => (
             <div key={n.id} className="rounded-lg border border-border p-3 text-sm">
               <p>{n.body}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{new Date(n.occurred_at).toLocaleString()}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{new Date(n.occurred_at).toLocaleString("en-US")}</p>
             </div>
           ))}
         </CardContent>
