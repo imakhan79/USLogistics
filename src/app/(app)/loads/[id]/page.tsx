@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { LoadTabs } from "@/components/loads/load-tabs";
 import { LoadHeaderActions } from "@/components/loads/load-header-actions";
+import { LoadRouteMapLoader } from "@/components/loads/load-route-map-loader";
 
 const STATUS_LABEL: Record<string, string> = {
   booked: "Booked",
@@ -39,6 +40,16 @@ export default async function LoadDetailsPage({ params }: { params: Promise<{ id
 
   const margin = Number(load.revenue) - Number(load.carrier_cost);
   const marginPct = Number(load.revenue) > 0 ? (margin / Number(load.revenue)) * 100 : 0;
+
+  const routeStops = (stops ?? [])
+    .filter((s) => s.lat != null && s.lng != null)
+    .map((s) => ({
+      id: s.id,
+      lat: Number(s.lat),
+      lng: Number(s.lng),
+      label: `${s.city}, ${s.state}`,
+      stop_type: s.stop_type as "pickup" | "delivery",
+    }));
 
   return (
     <div className="space-y-6">
@@ -88,40 +99,44 @@ export default async function LoadDetailsPage({ params }: { params: Promise<{ id
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Stops</CardTitle>
-          <CardDescription>Pickup and delivery timeline</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-4">
-            {(stops ?? []).map((stop, idx) => (
-              <li key={stop.id} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ${
-                      stop.stop_type === "pickup" ? "bg-electric-blue" : "bg-accent-teal"
-                    }`}
-                  >
-                    {idx + 1}
-                  </span>
-                  {idx < (stops?.length ?? 0) - 1 && <span className="mt-1 h-full w-px flex-1 bg-border" />}
-                </div>
-                <div className="pb-4">
-                  <p className="text-sm font-medium">
-                    {stop.stop_type === "pickup" ? "Pickup" : "Delivery"} — {stop.city}, {stop.state}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {stop.scheduled_at ? new Date(stop.scheduled_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Unscheduled"}
-                    {" · "}
-                    {stop.status}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Stops</CardTitle>
+            <CardDescription>Pickup and delivery timeline</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ol className="space-y-4">
+              {(stops ?? []).map((stop, idx) => (
+                <li key={stop.id} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ${
+                        stop.stop_type === "pickup" ? "bg-electric-blue" : "bg-accent-teal"
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+                    {idx < (stops?.length ?? 0) - 1 && <span className="mt-1 h-full w-px flex-1 bg-border" />}
+                  </div>
+                  <div className="pb-4">
+                    <p className="text-sm font-medium">
+                      {stop.stop_type === "pickup" ? "Pickup" : "Delivery"} — {stop.city}, {stop.state}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {stop.scheduled_at ? new Date(stop.scheduled_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Unscheduled"}
+                      {" · "}
+                      {stop.status}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+
+        {routeStops.length >= 2 && <LoadRouteMapLoader stops={routeStops} />}
+      </div>
 
       <LoadTabs
         documents={documents ?? []}
